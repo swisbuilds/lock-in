@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lock In — Stay Focused, Get Things Done</title>
+  <meta name="description" content="Lock In is a free Chrome extension that detects distracting websites and intervenes before you lose your focus. Set your goals, block distractions, and stay locked in." />
+
+  <!-- ══════════════════════════════════════════════════════
+       MONETAG SITE VERIFICATION
+       Replace the content value with the one from your
+       Monetag dashboard under Site Verification.
+  ══════════════════════════════════════════════════════ -->
+  <meta name="monetag" content="5918c10960e9c083447c1b9bc024ace5" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Lock In — Stay Focused" />
+  <meta property="og:description" content="The Chrome extension that catches you slacking and gets you back on track." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://swisbuilds.github.io/lock-in" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #7c3aed;
+      --purple-light: #a78bfa;
+      --purple-dark: #5b21b6;
+      --purple-deeper: #4c1d95;
+      --bg: #0a0a15;
+      --bg2: #111122;
+      --bg3: #1a1a2e;
+      --border: #1e1e35;
+      --text: #eee;
+      --muted: #888;
+      --faint: #444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--purple-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 21, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 48px;
+    }
+    .nav-logo { font-size: 18px; font-weight: 800; color: var(--purple-light); letter-spacing: -0.3px; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a { color: var(--muted); font-size: 14px; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-cta {
+      background: var(--purple);
+      color: #fff !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .nav-cta:hover { background: var(--purple-dark) !important; text-decoration: none !important; }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 100px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(124,58,237,0.12);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--purple-light);
+      margin-bottom: 28px;
+    }
+    .hero-badge span { font-size: 15px; }
+    h1 {
+      font-size: clamp(42px, 6vw, 72px);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff 30%, var(--purple-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--purple);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { background: var(--purple-dark); text-decoration: none; transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--faint); color: var(--text); text-decoration: none; }
+
+    /* ── Extension preview ── */
+    .preview {
+      max-width: 860px;
+      margin: 64px auto 0;
+      padding: 0 24px;
+    }
+    .preview-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1);
+    }
+    .preview-bar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .preview-url {
+      flex: 1;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 13px;
+      color: var(--faint);
+      margin: 0 12px;
+      font-family: monospace;
+    }
+    .preview-body {
+      padding: 48px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+    .preview-lock { font-size: 56px; }
+    .preview-tag {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--purple);
+      background: rgba(124,58,237,0.12);
+      border-radius: 100px;
+      padding: 4px 14px;
+    }
+    .preview-h { font-size: 26px; font-weight: 800; }
+    .preview-p { font-size: 15px; color: var(--muted); max-width: 380px; }
+    .preview-goals {
+      background: rgba(124,58,237,0.08);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 12px;
+      padding: 14px 20px;
+      text-align: left;
+      width: 100%;
+      max-width: 400px;
+    }
+    .preview-goals-label { font-size: 11px; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .preview-goal { font-size: 13px; color: #ccc; display: flex; gap: 8px; margin-bottom: 4px; }
+    .preview-goal::before { content: "→"; color: var(--purple); }
+    .preview-btn {
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 32px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: default;
+    }
+
+    /* ── Section shared ── */
+    section { padding: 96px 24px; }
+    .section-tag {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 14px;
+      line-height: 1.15;
+    }
+    .section-sub { font-size: 17px; color: var(--muted); max-width: 520px; line-height: 1.65; }
+    .centered { text-align: center; }
+    .centered .section-sub { margin: 0 auto; }
+
+    /* ── Features ── */
+    #features { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      max-width: 1080px;
+      margin: 56px auto 0;
+    }
+    .feature-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.15s;
+    }
+    .feature-card:hover { border-color: rgba(124,58,237,0.4); }
+    .feature-icon { font-size: 32px; margin-bottom: 14px; }
+    .feature-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── How it works ── */
+    #how {  max-width: 900px; margin: 0 auto; }
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 56px;
+      position: relative;
+    }
+    .steps::before {
+      content: "";
+      position: absolute;
+      left: 27px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--purple), transparent);
+    }
+    .step {
+      display: flex;
+      gap: 24px;
+      padding-bottom: 40px;
+    }
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 900;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .step-body { padding-top: 12px; }
+    .step-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .step-desc { font-size: 15px; color: var(--muted); line-height: 1.6; }
+
+    /* ── Modes ── */
+    #modes { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 1080px;
+      margin: 56px auto 0;
+    }
+    .mode-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      text-align: center;
+    }
+    .mode-icon { font-size: 28px; margin-bottom: 10px; }
+    .mode-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .mode-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* ── CTA ── */
+    #install {
+      text-align: center;
+      background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(124,58,237,0.12) 0%, transparent 70%);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-logo { font-size: 15px; font-weight: 800; color: var(--purple-light); }
+    .footer-text { font-size: 13px; color: var(--faint); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 13px; color: var(--faint); transition: color 0.15s; }
+    .footer-links a:hover { color: var(--muted); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      nav { padding: 12px 20px; }
+      .nav-links { display: none; }
+      footer { padding: 20px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <span class="nav-logo">🔒 Lock In</span>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#modes">Modes</a>
+      <a href="#install" class="nav-cta">Add to Chrome — Free</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge"><span>🔒</span> Free Chrome Extension</div>
+    <h1>Stop scrolling.<br>Start locking in.</h1>
+    <p class="hero-sub">Lock In detects when you visit distracting sites and steps in before you lose the next hour. Set your goals, pick your intervention, and get back to what matters.</p>
+    <div class="hero-actions">
+      <a href="https://chrome.google.com/webstore" class="btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4a8 8 0 1 1 0 16A8 8 0 0 1 12 4zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 12 6z"/></svg>
+        Add to Chrome — Free
+      </a>
+      <a href="https://github.com/swisbuilds/lock-in" class="btn-ghost">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View source
+      </a>
+    </div>
+
+    <!-- Extension UI mockup -->
+    <div class="preview">
+      <div class="preview-card">
+        <div class="preview-bar">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+          <div class="preview-url">reddit.com/r/funny</div>
+        </div>
+        <div class="preview-body">
+          <div class="preview-lock">🔒</div>
+          <div class="preview-tag">Lock In</div>
+          <div class="preview-h">You're off track.</div>
+          <p class="preview-p">You were heading somewhere distracting. Sit through this short break, then you can continue — or go back to what matters.</p>
+          <div class="preview-goals">
+            <div class="preview-goals-label">Your goals</div>
+            <div class="preview-goal">Finish CS project by Friday</div>
+            <div class="preview-goal">Study for exams</div>
+          </div>
+          <div class="preview-btn">← Go back</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div style="max-width:1080px;margin:0 auto;" class="centered">
+      <p class="section-tag">Features</p>
+      <h2 class="section-title">Everything you need to focus</h2>
+      <p class="section-sub">Built for people who know they're easily distracted and want to do something about it.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-title">Smart detection</div>
+        <p class="feature-desc">Automatically detects distracting sites using a built-in category engine covering social media, news, gaming, entertainment, NSFW, and more. Optional AI layer for edge cases.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">Goal-aware</div>
+        <p class="feature-desc">Set your current goals in plain English. Every intervention reminds you what you're working toward, not just that you got caught.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <div class="feature-title">Five intervention modes</div>
+        <p class="feature-desc">From a gentle motivational nudge to a full chaos-mode ad wall. Pick how hard you want to be stopped.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚫</div>
+        <div class="feature-title">Custom blocklist</div>
+        <p class="feature-desc">Add any URL or hostname to always block, on top of the automatic category detection.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Instant toggle</div>
+        <p class="feature-desc">One click in the popup to pause Lock In when you legitimately need a break. No settings menus.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔓</div>
+        <div class="feature-title">100% free & open source</div>
+        <p class="feature-desc">No subscription, no account, no data collection. Your goals and settings stay on your device.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section>
+    <div id="how" style="max-width:900px;margin:0 auto;">
+      <p class="section-tag">How it works</p>
+      <h2 class="section-title">Three steps, then it runs itself</h2>
+      <p class="section-sub">Set it up once and Lock In watches every tab you open from then on.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Set your goals</div>
+            <p class="step-desc">Open Settings and write down what you're working toward — your CS project, exam prep, a deadline. The more specific, the better the motivation when you need it.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Choose how hard to be stopped</div>
+            <p class="step-desc">Pick your intervention style — a gentle popup, a reflection prompt, a timed countdown, a full-page redirect, or Chaos Mode, which fills the screen with fake ads until you close them.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Lock in and get to work</div>
+            <p class="step-desc">Lock In watches every navigation in the background. The moment you drift toward a distracting site, it intervenes with your goals front and center.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modes -->
+  <section id="modes">
+    <div style="max-width:1080px;margin:0 auto;" class="centered">
+      <p class="section-tag">Intervention modes</p>
+      <h2 class="section-title">Choose your difficulty</h2>
+      <p class="section-sub">Pick the level of accountability that actually works for you.</p>
+    </div>
+    <div class="modes-grid">
+      <div class="mode-card">
+        <div class="mode-icon">💬</div>
+        <div class="mode-name">Motivational Popup</div>
+        <p class="mode-desc">A gentle nudge in the corner. Dismisses after 12 seconds.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon">🤔</div>
+        <div class="mode-name">Reflection Prompt</div>
+        <p class="mode-desc">"Was this intentional?" Choose to go back or continue consciously.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon">⏱️</div>
+        <div class="mode-name">Countdown Timer</div>
+        <p class="mode-desc">Full-screen overlay. You have to wait before you can proceed.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon">🚫</div>
+        <div class="mode-name">Full Redirect</div>
+        <p class="mode-desc">Replaces the tab entirely. Proceed button unlocks after 5 seconds.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon">🔥</div>
+        <div class="mode-name">Chaos Mode</div>
+        <p class="mode-desc">Fills the screen with obnoxious fake ads. Nuclear option.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install CTA -->
+  <section id="install">
+    <p class="section-tag centered">Get started</p>
+    <h2 class="section-title centered">Free forever. Install in 10 seconds.</h2>
+    <p class="section-sub centered" style="margin: 0 auto 40px;">No account. No subscription. Just install and start locking in.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://chrome.google.com/webstore" class="btn-primary" style="font-size:17px;padding:16px 36px;">
+        Add to Chrome — Free
+      </a>
+      <a href="https://github.com/swisbuilds/lock-in" class="btn-ghost" style="font-size:17px;padding:16px 36px;">
+        GitHub ↗
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <span class="footer-logo">🔒 Lock In</span>
+    <span class="footer-text">Built by <a href="https://github.com/swisbuilds">swisbuilds</a></span>
+    <div class="footer-links">
+      <a href="https://github.com/swisbuilds/lock-in">Source</a>
+      <a href="https://github.com/swisbuilds/lock-in/issues">Report a bug</a>
+      <a href="mailto:jacksims207@gmail.com">Contact</a>
+    </div>
+  </footer>
+
+</body>
+</html>
